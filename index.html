@@ -47,6 +47,20 @@
           <li>飛過寫住正確答案嘅空隙</li>
           <li>撞管或者飛錯空隙會扣命</li>
         </ul>
+        <div class="sum-range" id="startSumRange">
+          <div class="sum-range-title">總和範圍</div>
+          <label class="sum-row">
+            <span>總和最小</span>
+            <input type="range" id="startSumMin" min="2" max="20" step="1" />
+            <output id="outStartSumMin"></output>
+          </label>
+          <label class="sum-row">
+            <span>總和最大</span>
+            <input type="range" id="startSumMax" min="2" max="20" step="1" />
+            <output id="outStartSumMax"></output>
+          </label>
+          <p class="sum-range-hint">題目總和會喺 <strong id="sumRangePreview">5–15</strong> 之間</p>
+        </div>
         <button type="button" id="btnStart" class="primary-btn">開始遊戲</button>
         <a class="hub-link" href="https://tlc-cmyk.github.io/primary-prep-hub/">🏠 返主頁</a>
       </div>
@@ -86,6 +100,16 @@
             <option value="9">等級 9 · 進階</option>
             <option value="10">等級 10 · 高手</option>
           </select>
+        </label>
+        <label class="setting-row">
+          <span>總和最小</span>
+          <input type="range" id="setSumMin" min="2" max="20" step="1" />
+          <output id="outSumMin"></output>
+        </label>
+        <label class="setting-row">
+          <span>總和最大</span>
+          <input type="range" id="setSumMax" min="2" max="20" step="1" />
+          <output id="outSumMax"></output>
         </label>
         <label class="setting-row">
           <span>管子間距（思考時間）</span>

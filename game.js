@@ -10,7 +10,12 @@
     speed: 1.6,
     gap: 140,           // vertical gap height per choice pipe
     showViz: true,
+    sumMin: 5,          // addition sum range (inclusive)
+    sumMax: 15,
   };
+
+  const SUM_ABS_MIN = 2;
+  const SUM_ABS_MAX = 20;
 
   const STORAGE_KEY = "flappy-addition-settings-v1";
   const MAX_LIVES = 3;
@@ -19,13 +24,32 @@
 
   let settings = loadSettings();
 
+  function clampSum(n) {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return DEFAULTS.sumMin;
+    return Math.max(SUM_ABS_MIN, Math.min(SUM_ABS_MAX, Math.round(v)));
+  }
+
+  function normalizeSumRange(s) {
+    let lo = clampSum(s.sumMin);
+    let hi = clampSum(s.sumMax);
+    if (lo > hi) {
+      const t = lo;
+      lo = hi;
+      hi = t;
+    }
+    s.sumMin = lo;
+    s.sumMax = hi;
+    return s;
+  }
+
   function loadSettings() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { ...DEFAULTS };
-      return { ...DEFAULTS, ...JSON.parse(raw) };
+      if (!raw) return normalizeSumRange({ ...DEFAULTS });
+      return normalizeSumRange({ ...DEFAULTS, ...JSON.parse(raw) });
     } catch {
-      return { ...DEFAULTS };
+      return normalizeSumRange({ ...DEFAULTS });
     }
   }
 
@@ -65,11 +89,20 @@
   const setSpeed = document.getElementById("setSpeed");
   const setGap = document.getElementById("setGap");
   const setViz = document.getElementById("setViz");
+  const setSumMin = document.getElementById("setSumMin");
+  const setSumMax = document.getElementById("setSumMax");
   const outSpacing = document.getElementById("outSpacing");
   const outGravity = document.getElementById("outGravity");
   const outJump = document.getElementById("outJump");
   const outSpeed = document.getElementById("outSpeed");
   const outGap = document.getElementById("outGap");
+  const outSumMin = document.getElementById("outSumMin");
+  const outSumMax = document.getElementById("outSumMax");
+  const startSumMin = document.getElementById("startSumMin");
+  const startSumMax = document.getElementById("startSumMax");
+  const outStartSumMin = document.getElementById("outStartSumMin");
+  const outStartSumMax = document.getElementById("outStartSumMax");
+  const sumRangePreview = document.getElementById("sumRangePreview");
 
   // ─── Audio (soft blips) ────────────────────────────────────────────
   let muted = false;
@@ -211,7 +244,14 @@
     return makeQ(a, b);
   }
 
-  function generateQuestion(level) {
+  function genInSumRange(lo, hi) {
+    const sum = randInt(lo, hi);
+    if (sum <= 2) return makeQ(1, Math.max(1, sum - 1));
+    const a = randInt(1, sum - 1);
+    return makeQ(a, sum - a);
+  }
+
+  function generateQuestionRaw(level) {
     switch (level) {
       case 1: return genWithin10();
       case 2: return genSmallAdd();
@@ -225,6 +265,17 @@
       case 10:
       default: return genHard();
     }
+  }
+
+  function generateQuestion(level) {
+    normalizeSumRange(settings);
+    const lo = settings.sumMin;
+    const hi = settings.sumMax;
+    for (let i = 0; i < 48; i++) {
+      const q = generateQuestionRaw(level);
+      if (q.answer >= lo && q.answer <= hi) return q;
+    }
+    return genInSumRange(lo, hi);
   }
 
   function wrongAnswers(correct, count) {
@@ -867,6 +918,21 @@
   });
 
   // ─── Settings UI ───────────────────────────────────────────────────
+  function syncSumRangeUI() {
+    normalizeSumRange(settings);
+    setSumMin.value = settings.sumMin;
+    setSumMax.value = settings.sumMax;
+    outSumMin.textContent = settings.sumMin;
+    outSumMax.textContent = settings.sumMax;
+    startSumMin.value = settings.sumMin;
+    startSumMax.value = settings.sumMax;
+    outStartSumMin.textContent = settings.sumMin;
+    outStartSumMax.textContent = settings.sumMax;
+    if (sumRangePreview) {
+      sumRangePreview.textContent = settings.sumMin + "–" + settings.sumMax;
+    }
+  }
+
   function syncSettingsUI() {
     setDifficulty.value = settings.difficulty;
     setSpacing.value = settings.spacing;
@@ -880,9 +946,22 @@
     outJump.textContent = Number(settings.jump).toFixed(1);
     outSpeed.textContent = Number(settings.speed).toFixed(1);
     outGap.textContent = settings.gap;
+    syncSumRangeUI();
   }
 
-  function readSettingsFromUI() {
+  function applySumFromControls(minEl, maxEl, which) {
+    let lo = clampSum(minEl.value);
+    let hi = clampSum(maxEl.value);
+    if (which === "min" && lo > hi) hi = lo;
+    if (which === "max" && hi < lo) lo = hi;
+    settings.sumMin = lo;
+    settings.sumMax = hi;
+    minEl.value = lo;
+    maxEl.value = hi;
+  }
+
+  function readSettingsFromUI(opts) {
+    opts = opts || {};
     settings.difficulty = setDifficulty.value;
     settings.spacing = Number(setSpacing.value);
     settings.gravity = Number(setGravity.value);
@@ -890,6 +969,15 @@
     settings.speed = Number(setSpeed.value);
     settings.gap = Number(setGap.value);
     settings.showViz = setViz.checked;
+    if (opts.sumWhich) {
+      applySumFromControls(setSumMin, setSumMax, opts.sumWhich);
+    } else {
+      // keep existing settings.sum* unless both controls are trustworthy
+      settings.sumMin = clampSum(setSumMin.value);
+      settings.sumMax = clampSum(setSumMax.value);
+      normalizeSumRange(settings);
+    }
+    normalizeSumRange(settings);
     saveSettings();
     syncSettingsUI();
     if (state === "playing") {
@@ -902,15 +990,32 @@
     }
   }
 
+  function readSumFromStart(which) {
+    applySumFromControls(startSumMin, startSumMax, which);
+    normalizeSumRange(settings);
+    saveSettings();
+    syncSumRangeUI();
+  }
+
   [
     setDifficulty, setSpacing, setGravity, setJump, setSpeed, setGap, setViz
   ].forEach((el) => {
-    el.addEventListener("input", readSettingsFromUI);
-    el.addEventListener("change", readSettingsFromUI);
+    el.addEventListener("input", () => readSettingsFromUI());
+    el.addEventListener("change", () => readSettingsFromUI());
   });
 
+  setSumMin.addEventListener("input", () => readSettingsFromUI({ sumWhich: "min" }));
+  setSumMin.addEventListener("change", () => readSettingsFromUI({ sumWhich: "min" }));
+  setSumMax.addEventListener("input", () => readSettingsFromUI({ sumWhich: "max" }));
+  setSumMax.addEventListener("change", () => readSettingsFromUI({ sumWhich: "max" }));
+
+  startSumMin.addEventListener("input", () => readSumFromStart("min"));
+  startSumMin.addEventListener("change", () => readSumFromStart("min"));
+  startSumMax.addEventListener("input", () => readSumFromStart("max"));
+  startSumMax.addEventListener("change", () => readSumFromStart("max"));
+
   btnDefaults.addEventListener("click", () => {
-    settings = { ...DEFAULTS };
+    settings = normalizeSumRange({ ...DEFAULTS });
     saveSettings();
     syncSettingsUI();
   });
@@ -967,7 +1072,11 @@
 
   // Prevent rubber-band scroll on iOS
   document.body.addEventListener("touchmove", (e) => {
-    if (e.target.closest && e.target.closest(".settings-card")) return;
+    if (e.target.closest && (
+      e.target.closest(".settings-card") ||
+      e.target.closest(".sum-range") ||
+      e.target.closest('input[type="range"]')
+    )) return;
     e.preventDefault();
   }, { passive: false });
 })();
