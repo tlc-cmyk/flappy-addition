@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="加數小鳥" />
+  <meta name="theme-color" content="#5B9BD5" />
+  <title>加數小鳥</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="hud-pill" id="scorePill">分數 <span id="scoreVal">0</span></div>
+        <div class="hud-pill" id="levelPill">等級 <span id="levelVal">1</span></div>
+        <div class="hud-lives" id="livesEl" aria-label="生命"></div>
+      </div>
+      <div class="equation-card" id="eqCard">
+        <div class="eq-text" id="eqText">4 + 5 = ?</div>
+        <div class="eq-viz" id="eqViz"></div>
+      </div>
+    </div>
+
+    <!-- Top-right controls -->
+    <div id="topBtns">
+      <button type="button" id="btnMute" class="icon-btn" aria-label="靜音">🔊</button>
+      <button type="button" id="btnSettings" class="icon-btn" aria-label="設定">⚙️</button>
+    </div>
+
+    <!-- Start screen -->
+    <div id="startScreen" class="overlay">
+      <div class="card start-card">
+        <div class="logo-bird" aria-hidden="true">🐦</div>
+        <h1>加數小鳥</h1>
+        <p class="tagline">飛過正確答案嘅管子空隙</p>
+        <ul class="howto">
+          <li>輕觸螢幕令小鳥向上飛</li>
+          <li>飛過寫住正確答案嘅空隙</li>
+          <li>撞管或者飛錯空隙會扣命</li>
+        </ul>
+        <button type="button" id="btnStart" class="primary-btn">開始遊戲</button>
+      </div>
+    </div>
+
+    <!-- Feedback toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Game over -->
+    <div id="overScreen" class="overlay hidden">
+      <div class="card">
+        <h2>遊戲結束</h2>
+        <p class="big-score">分數 <span id="finalScore">0</span></p>
+        <p>等級 <span id="finalLevel">1</span></p>
+        <button type="button" id="btnRetry" class="primary-btn">再玩一次</button>
+        <button type="button" id="btnHome" class="ghost-btn">返回主頁</button>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="settingsPanel" class="overlay hidden">
+      <div class="card settings-card">
+        <h2>設定</h2>
+        <label class="setting-row">
+          <span>難度模式</span>
+          <select id="setDifficulty">
+            <option value="auto">自動升級（每 10 分）</option>
+            <option value="1">等級 1 · 10 以內</option>
+            <option value="2">等級 2 · 細數相加</option>
+            <option value="3">等級 3 · 雙同數</option>
+            <option value="4">等級 4 · 開始過十</option>
+            <option value="5">等級 5 · 過十練習</option>
+            <option value="6">等級 6 · 較大過十</option>
+            <option value="7">等級 7 · 混合</option>
+            <option value="8">等級 8 · 挑戰</option>
+            <option value="9">等級 9 · 進階</option>
+            <option value="10">等級 10 · 高手</option>
+          </select>
+        </label>
+        <label class="setting-row">
+          <span>管子間距（思考時間）</span>
+          <input type="range" id="setSpacing" min="220" max="520" step="10" />
+          <output id="outSpacing"></output>
+        </label>
+        <label class="setting-row">
+          <span>重力</span>
+          <input type="range" id="setGravity" min="0.25" max="1.2" step="0.05" />
+          <output id="outGravity"></output>
+        </label>
+        <label class="setting-row">
+          <span>跳躍力度</span>
+          <input type="range" id="setJump" min="5" max="14" step="0.5" />
+          <output id="outJump"></output>
+        </label>
+        <label class="setting-row">
+          <span>管子速度</span>
+          <input type="range" id="setSpeed" min="1.2" max="5" step="0.1" />
+          <output id="outSpeed"></output>
+        </label>
+        <label class="setting-row">
+          <span>空隙大小</span>
+          <input type="range" id="setGap" min="90" max="200" step="5" />
+          <output id="outGap"></output>
+        </label>
+        <label class="setting-row check-row">
+          <span>顯示計數物件</span>
+          <input type="checkbox" id="setViz" checked />
+        </label>
+        <div class="settings-actions">
+          <button type="button" id="btnDefaults" class="ghost-btn">還原預設</button>
+          <button type="button" id="btnCloseSettings" class="primary-btn">完成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
