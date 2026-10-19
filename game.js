@@ -4,11 +4,11 @@
   // ─── Defaults / settings ───────────────────────────────────────────
   const DEFAULTS = {
     difficulty: "auto", // "auto" | "1".."10"
-    spacing: 340,       // px between pipe groups (thinking time)
-    gravity: 0.48,
-    jump: 8.2,
-    speed: 2.4,
-    gap: 130,           // vertical gap height per choice pipe
+    spacing: 450,       // px between pipe groups (thinking time)
+    gravity: 0.40,
+    jump: 6.5,
+    speed: 1.6,
+    gap: 140,           // vertical gap height per choice pipe
     showViz: true,
   };
 
